@@ -7,7 +7,7 @@ import pandas as pd  # noqa: E402
 import plotly.graph_objects as go  # noqa: E402
 import streamlit as st  # noqa: E402
 
-from neatnest.app_utils import fig_layout, frame, header, note, page_setup, report_csv, results  # noqa: E402
+from neatnest.app_utils import asset, fig_layout, frame, header, note, page_setup, report_csv, results  # noqa: E402
 from neatnest.config import SERIES  # noqa: E402
 
 page_setup("Retention & CLV")
@@ -18,6 +18,7 @@ header("Layer 4 · Retention and customer value", "Keeping owners active after t
        f"(QR warranty sign-up, n={L['n']:,}) has **lapsed** when, in months 7-12, they buy no accessory, make no "
        f"referral and do not use the care hub. Features are a month-6 snapshot, so the model cannot see the future. "
        f"Base lapse rate: {L['base_rate'] * 100:.1f}%.")
+st.image(asset("diagrams/layer_strip_4.png"), width="stretch")
 
 met = frame(L["metrics"])
 k = st.columns(4)

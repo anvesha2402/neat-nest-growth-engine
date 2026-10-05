@@ -4,6 +4,7 @@ from __future__ import annotations
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.patches as mpatches  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
@@ -246,30 +247,101 @@ def fig_explain(R):
     _save(fig, "12_copilot_hyderabad")
 
 
+def box(ax, x, y, w, h, title, sub, color, title_size=9.5, sub_size=8):
+    ax.add_patch(plt.Rectangle((x, y), w, h, fc=color, ec="none", alpha=0.14))
+    ax.add_patch(plt.Rectangle((x, y + h - 0.08), w, 0.08, fc=color, ec="none"))
+    ax.text(x + 0.12, y + h - 0.3, title, fontsize=title_size, fontweight="bold", color=INK, va="top")
+    if sub:
+        ax.text(x + 0.12, y + h - 0.62, sub, fontsize=sub_size, color=INK_MUTED, va="top", linespacing=1.35)
+
+
+def pill(ax, x, y, w, h, text, color):
+    ax.add_patch(mpatches.FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0,rounding_size=0.12",
+                                          fc=color, ec="none", alpha=0.16))
+    ax.text(x + w / 2, y + h / 2, text, fontsize=7.6, color=INK, ha="center", va="center",
+            linespacing=1.25, fontweight="bold")
+
+
+def band_label(ax, x, y, text):
+    ax.text(x, y, text, fontsize=8, color=INK_MUTED, fontweight="bold", ha="left", va="center",
+            bbox={"boxstyle": "round,pad=0.25", "fc": BG, "ec": GRID, "lw": 0.8})
+
+
+def vline(ax, x, y0, y1, color=INK_MUTED, lw=1.3):
+    ax.annotate("", xy=(x, y1), xytext=(x, y0), arrowprops={"arrowstyle": "->", "color": color, "lw": lw})
+
+
+def draw_architecture(ax):
+    """Draws the full 5-band Neat Nest reference architecture onto `ax`. Shared by the
+    reproducible pipeline figure (reports/figures/00_architecture.png) and
+    scripts/make_diagrams.py (assets/diagrams/, used by the app, README and brief)."""
+    ax.axis("off"); ax.set_xlim(0, 13); ax.set_ylim(0, 11.1)
+    ax.text(0.1, 10.85, "Neat Nest growth engine: reference architecture", fontsize=15, fontweight="bold", color=INK)
+    ax.text(0.1, 10.5, "One simulated launch-year data universe, four analytics layers and a guarded AI agent, "
+                       "served through one Streamlit app.", fontsize=9, color=INK_MUTED)
+
+    # Band A - data & knowledge
+    band_label(ax, 0.1, 10.0, "DATA & KNOWLEDGE")
+    data_boxes = [("survey.csv", "n=600"), ("campaign.csv", "n=5,000"), ("customers.csv", "n=8,000"),
+                  ("sales.csv", "8,513 rows"), ("knowledge/*.md", "brand book, PRD,\nKPI rules, GTM playbook")]
+    dw, gap = 2.36, 0.12
+    for i, (t, s) in enumerate(data_boxes):
+        box(ax, 0.1 + i * (dw + gap), 8.75, dw, 1.05, t, s, PALETTE["charcoal"], title_size=8.6, sub_size=7.4)
+
+    for i in range(4):
+        vline(ax, 0.1 + i * (dw + gap) + dw / 2, 8.35, 8.75)
+    vline(ax, 0.1 + 4 * (dw + gap) + dw / 2, 5.55, 8.75, color=SERIES[3])  # knowledge feeds the agent band directly
+
+    # Band B - analytics & ML (4 columns)
+    band_label(ax, 0.1, 8.05, "ANALYTICS & ML")
+    cw = (12.6 - 3 * 0.15) / 4
+    cols = [
+        ("1  Brand & product", "STP · JTBD · Kano\nconcept matrix · CBBE\npackaging · RACE", SERIES[0]),
+        ("2  Customer factors", "Exploratory factor analysis\n(KMO, Bartlett, varimax)\nVan Westendorp, Kano", SERIES[2]),
+        ("3  Acquisition", "Binary logistic regression\n(statsmodels + sklearn)\ndecile lift, odds ratios", SERIES[1]),
+        ("4  Retention & value", "Logistic vs Random Forest\nOLS/Ridge/Lasso, K-Means\nCLV regression", SERIES[4]),
+    ]
+    for i, (t, s, c) in enumerate(cols):
+        box(ax, 0.1 + i * (cw + 0.15), 6.15, cw, 1.7, t, s, c)
+        vline(ax, 0.1 + i * (cw + 0.15) + cw / 2, 5.55, 6.15)
+
+    # Band C - AI agent layer (Nest Copilot)
+    band_label(ax, 0.1, 5.35, "AI AGENT LAYER")
+    box(ax, 0.1, 3.75, 12.6, 1.55, "5  Nest Copilot  (bounded agent + RAG)", None, SERIES[3])
+    sub_steps = ["Guardrails\n(blocklist,\nscope check)", "Planner\n(offline keywords\nor Claude, JSON)",
+                 "9 approved\nPython tools\n(no raw SQL)", "RAG retrieval\n(TF-IDF +\ntitle bonus)",
+                 "Explainer\n(template or Claude,\ncited IDs only)"]
+    sw = (12.2 - 4 * 0.1) / 5
+    for i, s in enumerate(sub_steps):
+        sx = 0.3 + i * (sw + 0.1)
+        ax.add_patch(plt.Rectangle((sx, 3.88), sw, 0.95, fc="white", ec=SERIES[3], lw=1.1))
+        ax.text(sx + sw / 2, 4.355, s, fontsize=7.3, color=INK, ha="center", va="center", linespacing=1.25)
+        if i < 4:
+            ax.annotate("", xy=(sx + sw + 0.1, 4.355), xytext=(sx + sw, 4.355),
+                        arrowprops={"arrowstyle": "->", "color": SERIES[3], "lw": 1.1})
+    vline(ax, 6.4, 3.35, 3.75)
+
+    # Band D - application layer
+    band_label(ax, 0.1, 3.05, "APPLICATION LAYER")
+    box(ax, 0.1, 1.85, 8.7, 1.1, "Streamlit app (8 pages)", "Home + Brand/Product, Market, Factors, Propensity, "
+        "Retention, Copilot, Methods, Architecture", PALETTE["indigo"], title_size=9.5, sub_size=7.6)
+    box(ax, 9.0, 1.85, 3.7, 1.1, "Claude API (optional)", "Live planning + explanation;\nfully offline by default",
+        PALETTE["olive"], title_size=9.2, sub_size=7.6)
+    vline(ax, 4.45, 1.45, 1.85)
+
+    # Band E - business outcomes
+    band_label(ax, 0.1, 1.15, "BUSINESS OUTCOMES")
+    outcomes = [("SAM\n8.5M households", SERIES[0]), ("Hero price\nRs 1,799", SERIES[2]),
+                ("Y3 net revenue\nRs 18.3 cr plan", SERIES[1]), ("Lapse AUC\n0.78", SERIES[4]),
+                ("Copilot suite\n30/30", SERIES[3])]
+    ow, ogap = 2.36, 0.12
+    for i, (t, c) in enumerate(outcomes):
+        pill(ax, 0.1 + i * (ow + ogap), 0.15, ow, 0.85, t, c)
+
+
 def fig_architecture():
-    fig, ax = plt.subplots(figsize=(11, 4.6))
-    ax.axis("off"); ax.set_xlim(0, 11); ax.set_ylim(0, 4.6)
-
-    def box(x, y, w, h, title, sub, color):
-        ax.add_patch(plt.Rectangle((x, y), w, h, fc=color, ec="none", alpha=0.14))
-        ax.add_patch(plt.Rectangle((x, y + h - 0.08), w, 0.08, fc=color, ec="none"))
-        ax.text(x + 0.12, y + h - 0.3, title, fontsize=9.5, fontweight="bold", color=INK, va="top")
-        ax.text(x + 0.12, y + h - 0.62, sub, fontsize=8, color=INK_MUTED, va="top", linespacing=1.35)
-
-    box(0.1, 2.5, 2.4, 1.9, "1  Brand & product", "Problem, market, STP\nJTBD, Kano, concept matrix\nCBBE, packaging, RACE", SERIES[0])
-    box(2.75, 2.5, 2.4, 1.9, "2  Customer factors", "Survey n=600\nFactor analysis (3 factors)\nVan Westendorp, Kano", SERIES[2])
-    box(5.4, 2.5, 2.4, 1.9, "3  Acquisition", "Campaign n=5,000\nLogistic propensity\nDecile targeting", SERIES[1])
-    box(8.05, 2.5, 2.8, 1.9, "4  Retention & value", "Owners n=8,000\nLapse model, CLV regression\nK-Means segments", SERIES[4])
-    box(0.1, 0.15, 10.75, 2.0, "5  Nest Copilot  (guarded agent + RAG)",
-        "Question -> safety check -> plan (offline keywords or Claude, JSON schema) -> validate -> approved Python tools\n"
-        "(sales analytics + score_prospect / customer_risk / segment_profile) -> TF-IDF retrieval over brand book, PRD,\n"
-        "KPI rules, GTM playbook -> explanation (template or Claude; no digits, cited IDs only) -> evidence + audit record",
-        SERIES[3])
-    for x in (2.5, 5.15, 7.8):
-        ax.annotate("", xy=(x + 0.25, 3.45), xytext=(x, 3.45), arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 1.5})
-    for x in (1.3, 3.95, 6.6, 9.45):
-        ax.annotate("", xy=(x, 2.15), xytext=(x, 2.5), arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 1.2})
-    ax.set_title("Neat Nest growth engine: five connected layers", loc="left")
+    fig, ax = plt.subplots(figsize=(13, 11.1))
+    draw_architecture(ax)
     _save(fig, "00_architecture")
 
 

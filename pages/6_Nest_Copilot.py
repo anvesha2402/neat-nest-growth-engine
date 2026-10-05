@@ -9,7 +9,7 @@ import pandas as pd  # noqa: E402
 import plotly.graph_objects as go  # noqa: E402
 import streamlit as st  # noqa: E402
 
-from neatnest.app_utils import data, fig_layout, header, note, page_setup, report_csv  # noqa: E402
+from neatnest.app_utils import asset, data, fig_layout, header, note, page_setup, report_csv  # noqa: E402
 from neatnest.config import SERIES  # noqa: E402
 from neatnest.copilot import Copilot  # noqa: E402
 from neatnest.copilot import llm as llm_mod  # noqa: E402
@@ -21,6 +21,7 @@ header("Layer 5 · AI decision layer", "Nest Copilot",
        "Ask a question about Neat Nest's sales, customers or playbook in plain English. Python calculates every number. "
        "The language model (live mode only) may only choose an approved plan and explain evidence that has already "
        "been calculated.")
+st.image(asset("diagrams/layer_strip_5.png"), width="stretch")
 
 with st.sidebar:
     st.header("Data and settings")

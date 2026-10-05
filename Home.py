@@ -44,6 +44,12 @@ for col, (t, b) in zip(cols, layers):
         card(t, b)
 
 st.write("")
+st.subheader("Reference architecture")
+st.image(asset("diagrams/architecture_master.png"), width="stretch")
+st.caption("Data & knowledge → analytics & ML → AI agent layer → application layer → business outcomes. "
+           "Open **🧭 Architecture** in the sidebar for the full diagram and the frameworks/keyword index "
+           "behind every layer.")
+
 st.subheader("How the layers hand off")
 st.markdown(
     "- **Brand → Factors:** the STP personas (Anjali, students, young couples, seniors) are tested against "

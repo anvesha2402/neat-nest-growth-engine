@@ -7,7 +7,7 @@ import pandas as pd  # noqa: E402
 import plotly.graph_objects as go  # noqa: E402
 import streamlit as st  # noqa: E402
 
-from neatnest.app_utils import fig_layout, frame, header, model, note, page_setup, results  # noqa: E402
+from neatnest.app_utils import asset, fig_layout, frame, header, model, note, page_setup, results  # noqa: E402
 from neatnest.config import SERIES  # noqa: E402
 from neatnest.propensity import score_prospect  # noqa: E402
 
@@ -17,6 +17,7 @@ P = R["propensity"]
 header("Layer 3 · Acquisition (binary logistic regression)", "Who buys after the launch campaign?",
        f"{P['n']:,} prospects reached in Phase 1 (Mumbai and Pune). Base conversion {P['base_rate'] * 100:.1f}%. "
        "statsmodels gives interpretable odds ratios; a scikit-learn pipeline gives an honest out-of-sample score.")
+st.image(asset("diagrams/layer_strip_3.png"), width="stretch")
 
 k = st.columns(4)
 k[0].metric("Model significance", f"LLR p < 0.001", help=f"McFadden pseudo R-squared {P['pseudo_r2']:.3f}")

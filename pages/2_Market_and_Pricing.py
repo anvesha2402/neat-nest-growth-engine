@@ -8,7 +8,7 @@ import plotly.graph_objects as go  # noqa: E402
 import streamlit as st  # noqa: E402
 
 from neatnest import research  # noqa: E402
-from neatnest.app_utils import data, fig_layout, frame, header, note, page_setup, results  # noqa: E402
+from neatnest.app_utils import asset, data, fig_layout, frame, header, note, page_setup, results  # noqa: E402
 from neatnest.config import PHASES, SERIES, SKUS, SOURCES  # noqa: E402
 from neatnest.market import unit_economics  # noqa: E402
 
@@ -18,6 +18,7 @@ m = R["market"]
 header("Layer 1 · Market, pricing and entry", "Sizing the market, then pricing it",
        "The market is sized from washing-machine ownership: households that carry laundry to a machine are the ones "
        "with a transport problem. Every input is either a cited source or a labelled estimate.")
+st.image(asset("diagrams/layer_strip_1.png"), width="stretch")
 
 k = st.columns(4)
 k[0].metric("TAM, urban laundry storage (Rs cr)", f"{m['tam_top_down_cr']:,.0f}-{m['tam_bottom_up_cr']:,.0f}",

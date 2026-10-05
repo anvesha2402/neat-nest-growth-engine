@@ -8,13 +8,14 @@ import plotly.graph_objects as go  # noqa: E402
 import streamlit as st  # noqa: E402
 
 from neatnest import research  # noqa: E402
-from neatnest.app_utils import data, fig_layout, header, note, page_setup  # noqa: E402
+from neatnest.app_utils import asset, data, fig_layout, header, note, page_setup  # noqa: E402
 from neatnest.config import SERIES  # noqa: E402
 
 page_setup("Customer Factors")
 header("Layer 2 · Customer understanding (factor analysis)", "Three dimensions behind ten survey answers",
        "Phase-0 survey of 600 launch-audience respondents. Nine behavioural and attitudinal items (plus age) are "
        "reduced to latent factors, which are then used to test whether the STP personas really differ.")
+st.image(asset("diagrams/layer_strip_2.png"), width="stretch")
 
 sv = data("survey")
 fa = research.factor_analysis(sv)

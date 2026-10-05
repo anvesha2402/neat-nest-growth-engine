@@ -15,6 +15,7 @@ header("Layer 1 · Brand & product management", "A category nobody engineered",
        "Laundry storage is used several times a week but is priced and built as a disposable commodity. The labour "
        "around it is invisible: India's Time Use Survey 2024 records women spending **289 minutes a day** on unpaid "
        "domestic services against **88 for men**. Because nobody counts that labour, nobody has designed for it.")
+st.image(asset("diagrams/layer_strip_1.png"), width="stretch")
 
 st.subheader("Four connected failures")
 c = st.columns(4)
