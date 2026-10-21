@@ -120,6 +120,19 @@ class Copilot:
                     plan["message"] = (plan.get("message", "") + f" No scope named, so the city with the largest "
                                        f"decline ({city}) was selected.").strip()
             res.evidence = self._execute(plan)
+            # Premise check. "Why did X decline in <month>?" presupposes a decline.
+            # Without this the copilot will happily explain a rise, attributing it to
+            # whichever product moved most - a confident answer to a false question.
+            if plan["operation"] == "explain":
+                f = res.evidence.facts
+                if f.get("prev") is not None and f.get("cur") is not None and f["cur"] >= f["prev"]:
+                    res.status = "data_error"
+                    res.plan = {**plan, "message": (
+                        f"There was no decline to explain: net sales in {f['scope']} moved from "
+                        f"{inr(f['prev'])} to {inr(f['cur'])}, a rise of "
+                        f"{(f['cur'] - f['prev']) / f['prev'] * 100:+.1f}%.")}
+                    res.seconds = time.perf_counter() - t0
+                    return res
             if plan.get("message"):
                 res.evidence.assumptions.append(plan["message"])
         except T.DataError as e:

@@ -13,7 +13,40 @@ PLAN_FIELDS = {"status", "operation", "metric", "city", "product", "channel", "f
 
 BLOCKLIST = ["api key", "apikey", "password", "secret", "token", "ignore previous", "ignore instructions",
              "ignore all", "system prompt", "drop table", "delete", "truncate", "execute", "exec(", "import os",
-             "rm -rf", "update set", "insert into", "aadhaar", "credit card"]
+             "rm -rf", "update set", "insert into", "aadhaar", "credit card",
+             # Added after the adversarial suite (copilot/adversarial.py) got 9 of 10
+             # attacks through. These are the phrasings that landed: an override
+             # smuggled alongside a legitimate request, a role reassignment, and an
+             # instruction dressed up as a data row.
+             "ignore your", "ignore the tool", "ignore tool", "your instructions", "your restrictions",
+             "tool restrictions", "developer mode", "reveal your", "print your", "system message",
+             "note to assistant", "for the rest of this conversation", "from your own knowledge",
+             "list every tool", "your configuration"]
+
+# Metrics people reasonably ask for that are NOT in the sales lines. Without this,
+# the planner silently falls back to net_sales and answers a question about EBITDA
+# with a revenue figure.
+OUT_OF_SCOPE_METRICS = ["ebitda", "ebit", "cac", "customer acquisition cost", "acquisition cost",
+                        "ltv", "cltv", "lifetime value", "roas", "contribution margin", "cm1", "cm2",
+                        "cm3", "gmv", "working capital", "break-even", "breakeven", "payback",
+                        "net profit", "net margin", "operating profit", "overhead", "burn rate"]
+
+# Entities absent from the simulated data. The failure these prevent is the worst
+# one in the suite: asked for a city that does not exist, the planner left `city`
+# as None, the filter was dropped, and the all-India total was returned as if it
+# were that city's figure.
+ABSENT_CITIES = ["chennai", "kolkata", "calcutta", "ahmedabad", "surat", "jaipur", "lucknow", "kanpur",
+                 "nagpur", "indore", "bhopal", "patna", "vadodara", "coimbatore", "kochi", "cochin",
+                 "chandigarh", "visakhapatnam", "vizag", "thiruvananthapuram", "guwahati", "bhubaneswar",
+                 "ludhiana", "agra", "varanasi", "nashik", "rajkot", "madurai", "mysore", "mysuru",
+                 "goa", "noida", "gurgaon", "gurugram", "faridabad", "ghaziabad", "thane", "navi mumbai"]
+
+# SKU names that do not exist in the ladder.
+ABSENT_SKUS = ["mini", "max", "plus", "air", "ultra", "compact", "nano", "grande", "xl", "slim",
+               "premium edition", "classic", "deluxe"]
+
+RECOMMENDATION_WORDS = r"\b(should we|should i|do you recommend|would you recommend|what should we|" \
+                       r"recommend that we|is it worth|ought we)\b"
 
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct",
                                       "nov", "dec"], start=1)}
@@ -59,6 +92,31 @@ def offline_plan(question: str, ctx: dict) -> dict:
     if re.search(r"\b(forecast|predict|next year|next month|future sales)\b", q):
         return {**plan, "status": "unsupported",
                 "message": "Forecasting is not supported: the copilot only describes recorded sales and model scores."}
+
+    # --- entity and scope guards (added after the adversarial suite) ----------
+    for m in OUT_OF_SCOPE_METRICS:
+        if re.search(rf"(?<![a-z]){re.escape(m)}(?![a-z])", q):
+            return {**plan, "status": "unsupported",
+                    "message": (f"'{m}' is not in the loaded sales data, which holds units, net sales, cost, "
+                                f"discount and gross margin by date, city, SKU and channel. Planning figures "
+                                f"such as CAC, contribution margin and EBITDA live in the economics model "
+                                f"(the Unit Economics and Parameters tabs), not here.")}
+    for c in ABSENT_CITIES:
+        if re.search(rf"\b{re.escape(c)}\b", q):
+            return {**plan, "status": "data_error",
+                    "message": (f"There is no data for {c.title()}. The simulated launch covers "
+                                f"{', '.join(cities)}.")}
+    for s in ABSENT_SKUS:
+        if re.search(rf"\b(flexfold|sku|edition|model)\b", q) and re.search(rf"\b{re.escape(s)}\b", q):
+            return {**plan, "status": "data_error",
+                    "message": (f"There is no '{s}' SKU. The ladder is FlexFold Lite, FlexFold, FlexFold "
+                                f"Heritage Edition, FlexFold Pro (B2B), Liner Set, Charcoal Odour Insert "
+                                f"and Wheel Kit.")}
+    years = sorted({m[:4] for m in months})
+    for y in re.findall(r"\b(?:19|20)\d\d\b", q):
+        if y not in years:
+            return {**plan, "status": "data_error",
+                    "message": f"There is no data for {y}. The simulated period runs {months[0]} to {months[-1]}."}
 
     # entities
     for c in cities:
@@ -111,6 +169,15 @@ def offline_plan(question: str, ctx: dict) -> dict:
     if re.search(r"\b(segment|cluster)s?\b", q):
         return {**plan, "operation": "segment_profile"}
 
+    # Recommendation requests. Placed AFTER the model-backed tools so that
+    # "who should we target" still routes to targeting - the copilot reports
+    # figures and scores, it does not decide things.
+    if re.search(RECOMMENDATION_WORDS, q):
+        return {**plan, "status": "unsupported",
+                "message": ("The copilot reports recorded figures and model scores; it does not make "
+                            "recommendations. Ask for the numbers behind the decision instead, for "
+                            "example units and gross margin by SKU.")}
+
     # knowledge questions (definitions, brand, PRD, policy) - only when not a ranking/data request
     if (is_def or any(h in q for h in KNOWLEDGE_HINTS)) and not ranking and not group and not mlist \
             and not re.search(r"\bwhy\b", q) and (not has_entity or any(h in q for h in KNOWLEDGE_HINTS)) \
@@ -162,7 +229,7 @@ def validate_plan(plan: dict, ctx: dict) -> dict:
     extra = set(plan) - PLAN_FIELDS
     if extra:
         raise ValueError(f"Unknown plan fields: {sorted(extra)}")
-    if plan.get("status") not in ("ok", "clarify", "unsupported"):
+    if plan.get("status") not in ("ok", "clarify", "unsupported", "data_error"):
         raise ValueError("Invalid status")
     if plan["status"] != "ok":
         return plan

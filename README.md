@@ -2,14 +2,14 @@
 
 # 🧺 Neat Nest Growth Engine
 
-**One brand, five connected layers: brand strategy → customer research → acquisition → retention → a guarded AI copilot.**
+**A methods portfolio and RevOps decision framework: brand strategy → customer research → acquisition → retention → a guarded AI copilot, demonstrated on a seeded simulation.**
 
 [![Live demo](https://img.shields.io/badge/Live_demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://neat-nest-growth-engine-lbrpssupgyjbzmptdb8gbk.streamlit.app/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-%E2%89%A51.50-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
 [![Claude](https://img.shields.io/badge/Agent-Claude%20(optional)-D97757?style=flat-square&logo=anthropic&logoColor=white)](https://www.anthropic.com/)
-[![Tests](https://img.shields.io/badge/tests-39%20passing-2EA44F?style=flat-square&logo=pytest&logoColor=white)](#quick-start)
+[![Tests](https://img.shields.io/badge/tests-118%20passing-2EA44F?style=flat-square&logo=pytest&logoColor=white)](#quick-start)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 *Tidy Starts Here.*
@@ -19,22 +19,39 @@
 </div>
 
 Neat Nest is a D2C home-organisation brand launching **FlexFold**, a fold-flat, wheeled, three-compartment
-laundry system for India's space-constrained apartments. This repository connects brand strategy, customer
-research, acquisition modelling, retention analytics and a guarded LLM copilot, all running on **one simulated
-launch-year data universe** — so the numbers on one page explain the numbers on the next. It began as five
-separate pieces of MBA coursework (Product & Brand Management, Factor Analysis, Binary Logistic Regression,
-an Advanced Analytics retention project, and a Generative/Agentic AI & RAG project) and is rebuilt here as one
-integrated system, end to end.
+laundry system for India's space-constrained apartments. This repository is a **methods portfolio and RevOps
+decision framework** — brand strategy, customer research, acquisition modelling, retention analytics and a
+guarded LLM copilot — demonstrated end to end on a seeded simulation.
+
+### Read this before the numbers
+
+**There is no real company and no real data.** FlexFold is a designed product concept, and all four datasets
+are simulated from parameters declared up front in `TRUE_PARAMS` in
+[`generate_data.py`](src/neatnest/generate_data.py).
+
+That changes what every figure here *is*. When the campaign model reports that completing the fit quiz
+multiplies purchase odds by 2.45, that is not a finding about how people shop for laundry hampers — the
+generator was told to plant an effect of 2.86, and 2.45 is what the model got back out of 393 simulated
+buyers.
+
+So the claim this project makes is narrower and testable: **given a data-generating process written down in
+advance, here is how a five-layer decision stack performs at recovering it, and here is where it fails.**
+That comparison is the headline result, and the failures are the interesting part — two planted channel
+effects that no model can detect at this sample size, a dominant lapse driver that is structurally invisible,
+and a value model whose R² falls from 0.93 to 0.13 once its target stops containing its own predictors.
+
+Full disclosures: **[`knowledge/model_cards.md`](knowledge/model_cards.md)** and the app's
+**Model Cards** and **Parameters** tabs.
 
 **▶ [Try the live app](https://neat-nest-growth-engine-lbrpssupgyjbzmptdb8gbk.streamlit.app/)** — no install needed.
 
-| Layer | Question | Method | Headline (simulated launch year) |
+| Layer | Question | Method | What came out (simulated, ranges across 5 seeds) |
 |---|---|---|---|
-| 1 · Brand & market | Is there a real, reachable market, and at what price? | Washing-machine-anchored TAM/SAM/SOM, unit economics, Van Westendorp | SAM **8.5 M households**; hero at **Rs 1,799** sits inside the acceptable range (Rs 1,210-1,850); Y3 plan **Rs 18.3 cr** |
-| 2 · Customer factors | What separates the personas? | Exploratory factor analysis (numpy: KMO, Bartlett, varimax), Kano | 3 factors, **69.5%** variance, KMO **0.73** |
-| 3 · Acquisition | Who buys after the launch campaign? | Binary logistic regression (statsmodels + sklearn pipeline) | Holdout AUC **0.75**; top 3 deciles hold **66%** of buyers; *Will it fit?* quiz OR **2.45** |
-| 4 · Retention & value | Which owners will lapse, and what are they worth? | Logistic vs Random Forest, OLS/Ridge/Lasso, K-Means | Lapse AUC **0.78** (logistic = forest); 4 owner segments |
-| 5 · Nest Copilot | Can a manager ask all of this in plain English, safely? | Bounded agent, JSON-schema plans, TF-IDF RAG, optional Claude | Offline suite **30/30** |
+| 1 · Brand & market | Is there a reachable market, at what price, and does a unit pay for itself? | Washing-machine-anchored TAM/SAM/SOM, unit economics, EBITDA bridge, Van Westendorp | SAM **8.5 M households**; Y3 plan **Rs 18.3 cr** net revenue, **Rs 3.74 cr** EBITDA — **but Y1 EBITDA is −Rs 0.26 cr** and the entry SKU loses **Rs 114/unit** on D2C acquisition |
+| 2 · Customer factors | What separates the personas? | Exploratory factor analysis from scratch in numpy (KMO, Bartlett, varimax), Kano | 3 planted factors recovered, KMO **0.73**; every item loads on its intended factor |
+| 3 · Acquisition | Who buys after the launch campaign? | Binary logistic regression (statsmodels + sklearn pipeline) | CV AUC **0.77** (0.74–0.79); 4 of 7 planted effects recovered, **2 real channel effects undetectable**, 2 planted nulls correctly null |
+| 4 · Retention & value | Which owners will lapse, and what are they worth? | Logistic vs Random Forest, OLS/Ridge/Lasso, K-Means, isotonic calibration | Lapse AUC **0.79**; Brier **0.187 → 0.163** recalibrated; value R² **0.93 leaky → 0.13 honest** |
+| 5 · Nest Copilot | Can a manager ask all of this in plain English, safely? | Bounded agent, JSON-schema plans, TF-IDF RAG, optional Claude | Fixed regression suite **30/30** (not an accuracy score); held-out adversarial suite **1/10 → 10/10** after the failures it exposed were fixed |
 
 ---
 
@@ -83,7 +100,8 @@ PYTHONPATH=src python -m neatnest.pipeline
 PYTHONPATH=src python scripts/make_diagrams.py
 ```
 
-Run the tests (39: market maths, factor analysis, models, copilot guardrails, mocked Claude client, every app page):
+Run the tests (118: parameter recovery, target leakage, out-of-fold scoring, the EBITDA bridge, registry
+integrity, adversarial copilot guardrails, mocked Claude client, every app page):
 
 ```bash
 python -m pytest -q
@@ -178,11 +196,18 @@ question → blocklist → plan (offline keywords | Claude, forced JSON-schema t
 * **Python computes every number.** The model never sees the full dataset and cannot run code or SQL.
 * **9 approved operations:** total, breakdown, trend, compare, explain (decline diagnosis), knowledge,
   targeting, customer_risk, segment_profile. **5 metrics:** net sales, gross profit, gross margin, units, discount.
+  Anything outside that set — CAC, EBITDA, contribution margin, a forecast, a recommendation — is refused rather
+  than approximated from whatever columns happen to be present.
 * **Fails safely:** ambiguous questions get a clarifying question, forecasts are declined, a missing month raises an
   error instead of being counted as zero, and any live prose containing digits or unknown sources falls back to the template.
+* **Guards added after being attacked:** an absent-entity gazetteer (cities and SKUs), an out-of-range date check, an
+  out-of-scope-metric check, a hardened injection blocklist, a refusal to make recommendations, and a premise check that
+  declines to explain a decline that did not happen. Each one exists because
+  [`copilot/adversarial.py`](src/neatnest/copilot/adversarial.py) got through without it.
 * **Planted test case:** in March 2028 a Kalamkari sleeve stock-out hits Hyderabad. Asking *"Why did sales decline in
   Hyderabad?"* returns a −34% fall, with Heritage Edition accounting for 63% of it and units down 83%, and points to the
-  stock-out policy.
+  stock-out policy. Note what this demonstrates: the copilot finds an anomaly that was **put there on purpose** and is
+  declared in `TRUE_PARAMS["sales_events"]`. It is a test of the diagnostic path, not evidence of discovery.
 
 ## Repository map
 
@@ -190,17 +215,22 @@ question → blocklist → plan (offline keywords | Claude, forced JSON-schema t
 Home.py                     Streamlit entry (Home)
 pages/                      0 Architecture · 1 Brand & Product · 2 Market & Pricing · 3 Customer Factors
                             4 Campaign Propensity · 5 Retention & CLV · 6 Nest Copilot · 7 Methods & Limits
+                            8 Model Cards (recovery, leakage, calibration) · 9 Parameters (switchboard, sensitivity)
 src/neatnest/
-  config.py                 every business assumption, with source / estimate tags
-  market.py                 TAM/SAM/SOM, unit economics, 3-year plan
-  generate_data.py          seeded simulation of survey, campaign, customers, sales
+  config.py                 89-parameter registry: value, unit, provenance, source, range, what it drives
+  market.py                 TAM/SAM/SOM, unit economics (CAC in CM3), explicit returns, 3-year plan
+  opex.py                   fixed overhead, EBITDA bridge, break-even, tornado, breaking points
+  recovery.py               planted vs estimated: the project's headline artefact
+  generate_data.py          seeded simulation + TRUE_PARAMS, the declared data-generating process
   research.py               KMO, Bartlett, principal extraction + varimax, Van Westendorp, Kano
   propensity.py             statsmodels logit + sklearn pipeline, CV, decile lift
   retention.py              lapse models, value regression, K-Means, retention scenario
-  copilot/                  planner, tools, knowledge (RAG), llm (Claude), engine, evaluate
+  copilot/                  planner, tools, knowledge (RAG), llm (Claude), engine, evaluate, adversarial
   pipeline.py · figures.py  end-to-end build, static analysis charts (reports/figures/)
 scripts/make_diagrams.py    reference-architecture diagram + per-layer strips (assets/diagrams/)
+scripts/seed_stability.py    re-runs the full stack across N seeds so metrics are quoted as ranges
 knowledge/                  brand_book.md · prd.md · kpi_rules.md · gtm_playbook.md  (RAG corpus)
+                            model_cards.md  (model cards + limitations disclosures)
 data/                       survey.csv · campaign.csv · customers.csv · sales.csv  (simulated)
 assets/                     product & brand photography, assets/diagrams/ (architecture images)
 models/ · reports/          trained pipelines, results.json, figures, copilot evaluation
@@ -214,18 +244,51 @@ tests/                      pytest suite incl. Streamlit AppTest
 |---|---|---|
 | `survey.csv` | 600 | 9 factor items + age, persona, laundry context, 4 Van Westendorp prices, 7 Kano pairs |
 | `campaign.csv` | 5,000 | age, income, digital engagement, prior home-org purchases, site visits, quiz completed, source, **purchased** |
-| `customers.csv` | 8,000 | first SKU/channel, care-hub logins, WhatsApp opens, accessory orders/spend, tickets, NPS, referrals (months 1-6), **lapsed_m7_12**, value_12m |
+| `customers.csv` | 8,000 | first SKU/channel, care-hub logins, WhatsApp opens, accessory orders/spend, tickets, NPS, referrals (months 1-6), **lapsed_m7_12**, `value_12m` (leaky by construction), `value_fwd_7_12` (forward-only) |
 | `sales.csv` | 8,513 | date, city, SKU/product, family, channel, sleeve, units, MRP, discount, net_sales (ex-GST), cost |
 
 ## Honest limits
 
-* **The business data is simulated** (seed 2027). Effect directions are designed to match the primary interviews
-  and published benchmarks. The models show the *decision system*; their coefficients are not market evidence.
-* Market inputs marked `EST` in `config.py` (household size, basket ownership and life, reachable share, unit cost,
-  CAC) need validating with Phase-0 research and vendor quotes.
-* Propensity scores rank prospects but are not calibrated probabilities. The quiz effect is associational.
-* Owner segments overlap (silhouette 0.16). The 12-month value regression is partly mechanical.
-* The copilot's offline parser is keyword-based. Live Claude mode is covered by mocked unit tests, not a live evaluation.
+Full disclosures in **[`knowledge/model_cards.md`](knowledge/model_cards.md)**. The ones that change how the
+results should be read:
+
+* **Every effect size is planted, not found.** `TRUE_PARAMS` declares the data-generating process and
+  [`recovery.py`](src/neatnest/recovery.py) scores the models against it. Of 19 planted coefficients: 10
+  recovered, 2 planted nulls correctly null, 1 biased, 3 missed on power, 3 structurally unrecoverable, **0
+  false positives**.
+* **The four datasets are independent panels of one scenario, not a linked funnel.** They share a seed, not a
+  population. No campaign prospect becomes a customer and no customer appears in the sales lines, so do not
+  add them up or trace a cohort across them. (An earlier version of this README called it "one data
+  universe". That was wrong.)
+* **Only 11 of 89 registered parameters trace to a published source.** 29 are benchmarks and 49 are
+  assumptions. The **Parameters** tab shows every one with its range and what it drives.
+* **The largest lever on Year-3 EBITDA is COGS — an `ASSUMED` input with no vendor quote behind it.** No
+  single parameter drives Year 3 negative within its declared range; the exposure is joint.
+* **CM3 is not profit, and Year 1 EBITDA is negative** (−Rs 0.26 cr). Year-1 break-even needs ~18,400 core
+  units against a plan of 12,000. The bridge stops at EBITDA: no interest, tax, or depreciation beyond
+  tooling. **Working capital is reported as an exposure, not modelled** — at Year 3 it exceeds Year 2 EBITDA,
+  which makes it the largest unmodelled risk here.
+* **There is no price-elasticity mechanism anywhere in the simulator.** A price change cannot alter demand, so
+  a competitor price war can be described but not modelled.
+* **The Van Westendorp band recovers a planted anchor** of Rs 1,650 (the indifference point lands within
+  0.6%); it does not discover a willingness to pay. **The Kano results are a print-out of their own input
+  probabilities** — the only quantity genuinely estimated there is the 8% inconsistent-answer rate.
+* **Propensity and lapse scores rank; they are not calibrated probabilities.** Measured rather than asserted:
+  Brier 0.187, improving to 0.163 under isotonic recalibration. The quiz effect is associational — prospects
+  self-select into the quiz.
+* **k = 4 segments is a presentation choice, not a fit result.** Silhouette prefers k = 2 (0.218 vs 0.161);
+  four segments are kept because they map to four distinct interventions, at a stated cost of 0.057 in
+  separation.
+* **The 30/30 regression suite is not an accuracy score.** Those questions were written during development.
+  The held-out adversarial suite scored **1 of 10** on its first run — it returned the all-India sales total
+  as the answer to a question about a city with no data. It now holds 10/10, but only because it was attacked.
+* **Metrics are seed-sensitive and should be quoted as ranges.** `scripts/seed_stability.py` runs the stack
+  across 5 seeds. The canonical seed sits near the bottom of the range for both CV AUC and the quiz odds
+  ratio, so several previously published figures were pessimistic draws.
+* The copilot's offline parser is keyword-based; its new guards fail closed but are a gazetteer and regexes,
+  not comprehension. **Live Claude mode is covered by mocked unit tests only** — real-model accuracy, latency
+  and cost are not measured anywhere in this project.
+* The primary interview base is **4 respondents**; any price anchor drawn from it is indicative only.
 
 ## Sources for market inputs
 

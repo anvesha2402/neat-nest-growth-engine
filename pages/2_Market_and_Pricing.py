@@ -49,7 +49,9 @@ a, b, c2, d = st.columns(4)
 sku = a.selectbox("SKU", list(SKUS), index=1, format_func=lambda s: SKUS[s]["name"])
 ch = b.selectbox("Channel", ["D2C", "Amazon", "B2B"])
 disc = c2.slider("Discount off MRP", 0, 30, 0, 1) / 100
-cac = d.slider("Acquisition cost per unit (Rs)", 0, 1200, 0 if ch == "B2B" else 520, 20)
+cac = d.slider("Acquisition cost per new customer (Rs)", 0, 1200, 0 if ch == "B2B" else 520, 20,
+               help="Charged on core units that acquire a new customer. Accessories and B2B carry none — "
+                    "accessories are sold to customers already paid for, which is why the attach rate matters.")
 ue = unit_economics(sku, ch, cac=cac, discount=disc)
 steps = [("Price paid", ue["price"]), ("GST", -ue["gst"]), ("COGS", -ue["cogs"]), ("Packaging", -ue["packaging"]),
          ("Shipping", -ue["shipping"]), ("Channel fees", -ue["channel_fees"]), ("Returns", -ue["returns"]),
@@ -64,21 +66,49 @@ st.plotly_chart(fig_layout(wf, f"CM2 Rs {ue['cm2']:,.0f} ({ue['cm2_pct'] * 100:.
 if ue["price"] > 2500:
     st.warning("Above Rs 2,500 per piece, textile made-ups attract 18% GST instead of 5%. Keep every SKU at or below Rs 2,499.")
 
-st.subheader("Three-year plan")
-som = frame(R["som_plan"])
-show = som[["core_units", "accessory_units", "net_revenue_cr", "cm2_cr", "marketing_cr", "cm3_cr", "cm3_pct", "share_of_sam_units_pct"]].copy()
-show.columns = ["Core units", "Accessory units", "Net revenue (Rs cr)", "CM2 (Rs cr)", "Marketing (Rs cr)",
-                "CM3 (Rs cr)", "CM3 %", "Share of SAM units %"]
-show["CM3 %"] = show["CM3 %"] * 100
+st.subheader("Three-year plan, down to EBITDA")
+br = frame(R["ebitda_bridge"])
+show = br[["core_units", "net_revenue_cr", "cm2_cr", "cm3_cr", "fixed_opex_cr", "ebitda_cr", "ebitda_pct",
+           "working_capital_exposure_cr"]].copy()
+show.columns = ["Core units", "Net revenue (Rs cr)", "CM2 (Rs cr)", "CM3 (Rs cr)", "Fixed OpEx (Rs cr)",
+                "EBITDA (Rs cr)", "EBITDA %", "Working capital (Rs cr)"]
+show["EBITDA %"] = show["EBITDA %"] * 100
 st.dataframe(show.style.format("{:,.2f}"), width="stretch")
-st.caption("CM3 is contribution after variable marketing and is shown before team, rent and tooling overheads.")
+
+eco = R["economics_summary"]
+st.markdown(f"""
+**CM3 is not profit.** It is what remains after the costs that scale with a unit sold. Subtracting fixed
+overhead — team, rent and 3PL, tooling amortisation, platform, support, insurance — gives EBITDA, and
+**Year 1 comes out at Rs {eco['ebitda_cr']['Y1']:.2f} cr.** That is the normal shape for a D2C launch carrying
+tooling and a team against 12,000 units, and a plan that reaches contribution positivity in Year 1 and EBITDA
+positivity in **{eco['first_ebitda_positive_year']}** is a more credible claim than one that looks profitable
+from month one.
+
+Two things this table is not. It is **not a forecast** — the unit volumes are a plan, and no demand model
+stands behind them. And it is **not a cash runway**: the bridge stops at EBITDA, and working capital is shown
+as an exposure (inventory days x goods cost) rather than modelled as a flow. At Year 3 that exposure exceeds
+Year 2 EBITDA, which makes it the largest unmodelled risk in the project.
+
+Move the inputs yourself on the **Parameters** tab, which also shows which single parameter moves Year-3
+EBITDA most. (It is COGS, and it is an assumption with no vendor quote behind it.)
+""")
 
 st.subheader("Market entry")
 for name, when, what in PHASES:
     st.markdown(f"**{name}** · {when}  \n{what}")
 
-with st.expander("Sources and labelled estimates"):
+with st.expander("Sources, benchmarks and assumptions"):
+    kinds = R["parameters"]["by_kind"]
+    st.markdown(f"""
+Of **{R['parameters']['n']} registered parameters**, only **{kinds.get('SOURCED', 0)}** trace to a named
+published source. **{kinds.get('BENCHMARK', 0)}** are benchmark inputs from comparable products, categories or
+rate cards, and **{kinds.get('ASSUMED', 0)}** are assumptions with no external basis — unit costs, reachable
+share, basket ownership and life, attach rates, the unit volumes and the whole overhead schedule among them.
+
+Those assumptions are the work programme: each is something a vendor quote or a Phase-0 test would replace.
+The **Parameters** tab lists every one with its provenance tag, source string, plausible range and what it
+drives, and `config.check_registry()` fails the build if any published value drifts from the value the code
+actually uses.
+""")
     for kx, v in SOURCES.items():
         st.markdown(f"- **{kx}**: {v}")
-    st.markdown("- **EST** values (urban household size, basket ownership and life, reachable share, unit costs, "
-                "payment-gateway fee, returns, CAC) are assumptions to validate with Phase-0 research and vendor quotes.")

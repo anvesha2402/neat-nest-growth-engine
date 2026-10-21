@@ -1,5 +1,5 @@
-,customers,lapse_rate,value_12m,care_hub_logins_m1_6,whatsapp_open_rate,accessory_spend_m1_6,referrals_m1_6,support_tickets_m1_6,nps_m3,share
-Quiet One-timers,2617,0.411,2059.498,1.442,29.522,122.117,0.228,0.413,5.879,0.327
-Steady Replenishers,2929,0.203,2230.9,2.319,50.902,151.912,0.249,0.413,8.377,0.366
-Service-scarred,1085,0.647,2109.982,2.065,42.326,187.272,0.218,2.633,6.076,0.136
-Nest Advocates,1369,0.087,3620.43,4.757,62.318,538.839,1.137,0.629,8.561,0.171
+,customers,lapse_rate,value_12m,value_fwd_7_12,care_hub_logins_m1_6,whatsapp_open_rate,accessory_spend_m1_6,referrals_m1_6,support_tickets_m1_6,nps_m3,share
+Quiet One-timers,2617,0.411,2059.498,111.575,1.442,29.522,122.117,0.228,0.413,5.879,0.327
+Steady Replenishers,2929,0.203,2230.9,222.559,2.319,50.902,151.912,0.249,0.413,8.377,0.366
+Service-scarred,1085,0.647,2109.982,115.063,2.065,42.326,187.272,0.218,2.633,6.076,0.136
+Nest Advocates,1369,0.087,3620.43,344.327,4.757,62.318,538.839,1.137,0.629,8.561,0.171
